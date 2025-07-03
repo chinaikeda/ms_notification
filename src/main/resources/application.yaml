@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: ikeda-notification-ms
+  config:
+    import: 'configserver:'
+  cloud:
+    config:
+      discovery:
+        serviceId: ikeda-config-server
