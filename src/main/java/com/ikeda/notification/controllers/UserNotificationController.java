@@ -6,6 +6,8 @@ import com.ikeda.notification.dtos.NotificationRecordDto;
 import com.ikeda.notification.models.NotificationModel;
 import com.ikeda.notification.services.NotificationService;
 import jakarta.validation.Valid;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,7 +21,9 @@ import java.util.UUID;
 
 @RestController
 public class UserNotificationController {
-    
+
+    Logger logger = LogManager.getLogger(UserNotificationController.class);
+
     final NotificationService notificationService;
     final AuthenticationCurrentUserService authenticationCurrentUserService;
 
@@ -33,7 +37,9 @@ public class UserNotificationController {
     public ResponseEntity<Page<NotificationModel>> getAllNotificationsByUser(@PathVariable(value = "userId") UUID userId,
                                                                             Pageable pageable){
         UserDetailsImpl userDetails = authenticationCurrentUserService.getCurrrentUser();
-        if (userDetails.getUserId().equals(userId) || userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))){
+        logger.info(String.format("Authentication userId {%s} - getAllNotificationsByUser do userId {%s}", userDetails.getUserId(), userId));
+
+        if (userDetails.getUserId().equals(userId) || userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_MANAGER"))){
             return ResponseEntity.status(HttpStatus.OK).body(notificationService.findAllNotificationsByUser(userId, pageable));
         } else {
             throw new AccessDeniedException("Forbidden");
@@ -46,6 +52,8 @@ public class UserNotificationController {
                                                      @PathVariable(value = "notificationId") UUID notificationId,
                                                      @RequestBody @Valid NotificationRecordDto notificationRecordDto) {
         UserDetailsImpl userDetails = authenticationCurrentUserService.getCurrrentUser();
+        logger.info(String.format("Authentication userId {%s} - updateNotification do userId {%s} e notificationId {%s}", userDetails.getUserId(), userId, notificationId));
+
         if (userDetails.getUserId().equals(userId) || userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))){
             return ResponseEntity.status(HttpStatus.OK).body(notificationService.updateNotification(notificationRecordDto, notificationService.findByNotificationIdAndUserId(notificationId, userId).get()));
         } else {
